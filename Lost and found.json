@@ -1,0 +1,347 @@
+{
+  "name": "Lost and found",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Lost and found",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Student name ",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Email",
+              "fieldType": "email",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Item name ",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Item colour",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Location",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Lost or found?",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Lost"
+                  },
+                  {
+                    "option": "Found"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Image",
+              "fieldType": "file"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        0,
+        0
+      ],
+      "id": "efa484ed-b09b-4bc5-a15b-ed6a9c48a878",
+      "name": "On form submission",
+      "webhookId": "9957a64a-105b-42b4-be64-bee725a52355"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Student: {{ $json['Student name '] }}\nsubmitted a   {{ $json['Lost or found?'] }}\nrequest for a item name  {{ $json['Item name '] }} and colour is {{ $json['Item colour'] }} at {{ $json.Location }}\nWrite a short confirmation email in simple English.",
+        "options": {
+          "systemMessage": "You are a helpful You are a Lost and Found Assistant.\n\nIf the student selected \"Lost\", tell them their request has been recorded.\n\nIf the student selected \"Found\", thank them for submitting the item.\n\nAlways reply in simple English.assistant"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        448,
+        0
+      ],
+      "id": "c77177da-8631-4e0c-a7cc-4436f435982e",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        320,
+        208
+      ],
+      "id": "63e50342-5037-4ec5-bcaf-2a7ab475ea6b",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Copy the uploaded photo binary from the form trigger onto this item as 'data'\nconst formItem = $('On form submission').first();\nconst binary = (formItem && formItem.binary) || {};\nconst keys = Object.keys(binary);\nconst out = { json: $json };\nif (keys.length > 0) {\n  out.binary = { data: binary[keys[0]] };\n}\nreturn [out];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        816,
+        0
+      ],
+      "id": "640de212-6ec3-4d79-805c-a149a7daf8cf",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Append or update row in sheet').item.json.Email }}",
+        "subject": "=Lost or found update",
+        "message": "= <!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"UTF-8\">\n  <title>Lost and Found Management System</title>\n</head>\n\n<body style=\"margin:0; padding:0; background-color:#f4f8ff; font-family:Arial, sans-serif;\">\n\n  <div style=\"\n    max-width:600px;\n    margin:30px auto;\n    background-color:#ffffff;\n    border-radius:18px;\n    padding:30px;\n    box-shadow:0 4px 12px rgba(0,0,0,0.10);\n  \">\n\n    <h1 style=\"\n      text-align:center;\n      font-size:30px;\n      margin-bottom:5px;\n    \">\n      🔎 Lost & Found\n    </h1>\n\n    <p style=\"\n      text-align:center;\n      font-size:16px;\n      color:#666666;\n      margin-top:0;\n    \">\n      Lost something? Don't worry — we're here to help! 🎒\n    </p>\n\n    <hr style=\"\n      border:none;\n      border-top:2px dashed #d9e4f5;\n      margin:25px 0;\n    \">\n\n    <div style=\"\n      background-color:#fff8dc;\n      border-radius:14px;\n      padding:20px;\n      font-size:17px;\n      line-height:1.7;\n      color:#333333;\n    \">\n      {{ $json.output }}\n    </div>\n\n    <p style=\"\n      margin-top:25px;\n      font-size:16px;\n      line-height:1.6;\n      color:#555555;\n    \">\n      💡 <strong>Remember:</strong> If you find something that doesn't belong to you,\n      please hand it to a teacher or the Lost & Found team. You could make someone's\n      day! 😊\n    </p>\n\n    <div style=\"\n      text-align:center;\n      margin-top:30px;\n      padding-top:20px;\n      border-top:2px dashed #d9e4f5;\n    \">\n      <p style=\"font-size:18px; margin-bottom:5px;\">\n        🧢 🎒 📚 🧸 ✏️\n      </p>\n\n      <p style=\"\n        color:#777777;\n        font-size:14px;\n        margin:0;\n      \">\n        Lost & Found Management System\n      </p>\n    </div>\n\n  </div>\n\n</body>\n</html>",
+        "options": {
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              {}
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1040,
+        0
+      ],
+      "id": "17b5ebfb-034e-44bc-a660-a19a02d41da0",
+      "name": "Send a message",
+      "webhookId": "36fe6cbf-6e69-486c-a4e7-d44c771ec262",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "MIUhGaUTONMtgway",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1UzUX_jMoK0B8_nBnOq_Bw2X5w0FLtYsDHCk-PFqJiK0",
+          "mode": "list",
+          "cachedResultName": " Lost or found",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1UzUX_jMoK0B8_nBnOq_Bw2X5w0FLtYsDHCk-PFqJiK0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1UzUX_jMoK0B8_nBnOq_Bw2X5w0FLtYsDHCk-PFqJiK0/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Student name ": "={{ $json['Student name '] }}",
+            "Email": "={{ $json.Email }}",
+            "Item name ": "={{ $json['Item name '] }}",
+            "Item colour": "={{ $json['Item colour'] }}",
+            "Lost or found?": "={{ $json['Lost or found?'] }}",
+            "Location": "={{ $json.Location }}",
+            "Lost": "={{ $json['Lost or found?'] }}"
+          },
+          "matchingColumns": [
+            "Student name "
+          ],
+          "schema": [
+            {
+              "id": "Student name ",
+              "displayName": "Student name ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Item name ",
+              "displayName": "Item name ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Item colour",
+              "displayName": "Item colour",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Location",
+              "displayName": "Location",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Lost or found?",
+              "displayName": "Lost or found?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Lost",
+              "displayName": "Lost",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        0
+      ],
+      "id": "b6b4bee2-54ef-4db6-859a-aaefab9fde0c",
+      "name": "Append or update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "77tPOiusyWfc8Fh4",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "51bb6172-0db6-4ab8-b665-edf6f7afca80",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d15adae0fd0586597626a2cd8a62d0018e389890e265c4815acf15d7104cfa3b"
+  },
+  "nodeGroups": [],
+  "id": "8SrfSoL885TH6PdP",
+  "tags": []
+}
